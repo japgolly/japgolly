@@ -1,12 +1,12 @@
 package japgolly.webapp.libs
 
-import ScalaLibraries._
+import japgolly.webapp.libs.ScalaLibraries._
 
 final case class ScalaLibraries(libs: Set[Lib], deps: Set[Dep])
 
 object ScalaLibraries {
 
-  final case class Lib(repoName: String, scalaVersions: Set[String], tags: Set[Tag])
+  final case class Lib(id: Int, repoName: String, scalaVersions: Set[String], tags: Set[Tag])
 
   sealed trait Scope
   object Scope {
@@ -28,8 +28,9 @@ object ScalaLibraries {
     import Scope._
 
     private object state {
-      var libs = List.empty[Lib]
-      var deps = List.empty[Dep]
+      var prevId = 0
+      var libs   = List.empty[Lib]
+      var deps   = List.empty[Dep]
 
       def addDep(f: MScope, t: MScope, optional: Boolean): Unit =
         for {
@@ -60,7 +61,10 @@ object ScalaLibraries {
         case "13" => "2.13"
         case "3"  => "3.0"
       }.toSet
-      val l = Lib(repoName, scalaVerSet, tags.toSet)
+      state.prevId += 1
+      val id = state.prevId
+      val l = Lib(id, repoName, scalaVerSet, tags.toSet)
+      state.libs ::= l
       def mkWithScope(s: Scope): MLib =
         new MLib {
           override private[Mutable] val modules = Seq((l, s))

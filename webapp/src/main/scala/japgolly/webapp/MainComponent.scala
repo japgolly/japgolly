@@ -1,36 +1,31 @@
 package japgolly.webapp
 
+import japgolly.scalajs.react.ReactMonocle._
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.vdom.html_<^._
-import japgolly.webapp.facades.GraphvizReact
+import japgolly.webapp.libs.LibrariesComponent
+import monocle.macros.GenLens
 
 object MainComponent {
 
   type Props = Unit
 
-  final case class State()
+  final case class State(libs: LibrariesComponent.State)
 
   object State {
     def init = apply(
+      LibrariesComponent.State.init,
     )
+
+    val libs = GenLens[State](_.libs)
   }
 
   final class Backend($: BackendScope[Props, State]) {
-
-    val dot = """
-graph {
-  grandparent -- "parent A";
-  child;
-  "parent B" -- child;
-  grandparent --  "parent B";
-}
-    """
-
-    def render(s: State): VdomElement =
-      <.div(
-        <.div("Cool! state = " + s),
-        GraphvizReact(dot)
-      )
+    def render(s: State): VdomElement = {
+      val ssLibs = StateSnapshot.zoomL(State.libs)(s).setStateVia($)
+      LibrariesComponent.Component(ssLibs)
+    }
   }
 
   val Component = ScalaComponent.builder[Props]

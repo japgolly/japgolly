@@ -17,7 +17,8 @@ object Dependencies {
   }
 
   object Dep {
-    val monocle             = Def.setting("dev.optics"                        %%% "monocle-core"       % Ver.monocle)
+    val monocleCore         = Def.setting("dev.optics"                        %%% "monocle-core"       % Ver.monocle)
+    val monocleMacro        = Def.setting("dev.optics"                        %%% "monocle-macro"      % Ver.monocle)
     val scalaCss            = Def.setting("com.github.japgolly.scalacss"      %%% "core"               % Ver.scalaCss)
     val scalaCssReact       = Def.setting("com.github.japgolly.scalacss"      %%% "ext-react"          % Ver.scalaCss)
     val scalaJsDom          = Def.setting("org.scala-js"                      %%% "scalajs-dom"        % Ver.scalaJsDom cross CrossVersion.for3Use2_13)

@@ -79,7 +79,8 @@ lazy val webapp = project
   .configure(commonSettings)
   .settings(
     libraryDependencies ++= Seq(
-      Dep.monocle.value,
+      Dep.monocleCore.value,
+      Dep.monocleMacro.value,
       Dep.scalaCss.value,
       Dep.scalaCssReact.value,
       Dep.scalaJsDom.value,
