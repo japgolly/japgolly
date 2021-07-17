@@ -2,6 +2,7 @@ package japgolly.webapp
 
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.webapp.facades.GraphvizReact
 
 object MainComponent {
 
@@ -15,8 +16,21 @@ object MainComponent {
   }
 
   final class Backend($: BackendScope[Props, State]) {
+
+    val dot = """
+graph {
+  grandparent -- "parent A";
+  child;
+  "parent B" -- child;
+  grandparent --  "parent B";
+}
+    """
+
     def render(s: State): VdomElement =
-      <.div("Cool! state = " + s)
+      <.div(
+        <.div("Cool! state = " + s),
+        GraphvizReact(dot)
+      )
   }
 
   val Component = ScalaComponent.builder[Props]
