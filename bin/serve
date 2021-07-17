@@ -1,0 +1,23 @@
+#!/bin/bash
+cd "$(dirname "$0")/.." || exit 1
+src="$(pwd)"
+tgt=/tmp/japgolly-serve
+rm -rf $tgt
+mkdir $tgt
+set -euo pipefail
+cd $tgt
+
+function link {
+  f=$(basename $1)
+  ln -s "$src/$1" $f
+}
+
+link bin/serve.py
+link webapp/src/main/html/index.html
+link webapp/target/scala-2.13/webapp-fastopt.js
+link webapp/target/scala-2.13/webapp-fastopt.js.map
+
+echo "> ls -la $tgt"
+ls -la
+
+exec python3 serve.py

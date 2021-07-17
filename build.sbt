@@ -80,6 +80,8 @@ lazy val webapp = project
   .settings(
     libraryDependencies ++= Seq(
       Dep.monocle.value,
+      Dep.scalaCss.value,
+      Dep.scalaCssReact.value,
       Dep.scalaJsDom.value,
       Dep.scalaJsReactCore.value,
       Dep.scalaJsReactExtra.value,

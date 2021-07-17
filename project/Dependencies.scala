@@ -1,8 +1,6 @@
 import sbt._
 import sbt.Keys._
 import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
-import org.scalajs.jsdependencies.sbtplugin.JSDependenciesPlugin
-import org.scalajs.jsdependencies.sbtplugin.JSDependenciesPlugin.autoImport._
 
 object Dependencies {
 
@@ -12,6 +10,7 @@ object Dependencies {
     val kindProjector    = "0.13.0"
     val monocle          = "3.0.0"
     val scala            = "2.13.6"
+    val scalaCss         = "0.8.0-M1"
     val scalaJsDom       = "1.1.0"
     val scalaJsReact     = "2.0.0-RC2"
     val univEq           = "1.4.0"
@@ -19,6 +18,8 @@ object Dependencies {
 
   object Dep {
     val monocle             = Def.setting("dev.optics"                        %%% "monocle-core"       % Ver.monocle)
+    val scalaCss            = Def.setting("com.github.japgolly.scalacss"      %%% "core"               % Ver.scalaCss)
+    val scalaCssReact       = Def.setting("com.github.japgolly.scalacss"      %%% "ext-react"          % Ver.scalaCss)
     val scalaJsDom          = Def.setting("org.scala-js"                      %%% "scalajs-dom"        % Ver.scalaJsDom cross CrossVersion.for3Use2_13)
     val scalaJsReactCore    = Def.setting("com.github.japgolly.scalajs-react" %%% "core"               % Ver.scalaJsReact)
     val scalaJsReactExtra   = Def.setting("com.github.japgolly.scalajs-react" %%% "extra"              % Ver.scalaJsReact)
