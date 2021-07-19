@@ -23,13 +23,14 @@ object LibrariesComponent {
 
   sealed trait Option
   object Option {
-    case object Apps      extends Option
     case object Optional  extends Option
-    case object Test      extends Option
+    case object Dev       extends Option
+    case object Apps      extends Option
     case object ScalaVers extends Option
     case object Scalaz    extends Option
 
     val mutallyExclusive = Set[Set[Option]](
+      Set(Dev, Optional),
       Set(ScalaVers, Scalaz),
     )
   }
@@ -62,10 +63,10 @@ object LibrariesComponent {
       <.div(
         *.options,
         renderOption(Option.Optional,  "Show optional deps"),
-        renderOption(Option.Test,      "Show test-scope deps"),
+        renderOption(Option.Dev,       "Show dev deps"),
         renderOption(Option.Apps,      "Show apps (as well as libraries)"),
         renderOption(Option.ScalaVers, "Show Scala versions"),
-        renderOption(Option.Scalaz,    "Still on Scalaz"),
+        renderOption(Option.Scalaz,    "Still on/supports Scalaz"),
       )
     }
 
@@ -95,7 +96,7 @@ object LibrariesComponent {
             }
 
             if (opts.contains(Option.Scalaz) && l(Tag.Scalaz)) {
-              name += "\\nStill on Scalaz"
+              name += "\\nStill on/supports Scalaz"
               dot += "[fillcolor=orange]"
             }
 
@@ -108,23 +109,32 @@ object LibrariesComponent {
       def renderEdges: (String, Set[Lib]) = {
         var dot = ""
         var libs = Set.empty[Lib]
-        for (e <- Manifest.scalaLibraries.deps) {
+        var deps = Manifest.scalaLibraries.deps
 
-          var allow = allowLib(e.fromLib) && allowLib(e.toLib)
+        if (opts.contains(Option.Dev)) {
+          deps = deps.map(_.copy(fromScope = Scope.Main, toScope = Scope.Main, optional = false))
+        }
+
+        for (d <- deps) {
+
+          var allow = allowLib(d.fromLib) && allowLib(d.toLib)
           def applyFilter(f: (Lib, Scope) => Boolean): Unit = {
-            allow &&= f(e.fromLib, e.fromScope)
-            allow &&= f(e.toLib, e.toScope)
+            allow &&= f(d.fromLib, d.fromScope)
+            allow &&= f(d.toLib, d.toScope)
           }
           if (!opts.contains(Option.Optional))
-            allow &&= !e.optional
-          if (!opts.contains(Option.Test))
-            applyFilter((_, s) => s != Scope.Test)
+            allow &&= !d.optional
+          if (!opts.contains(Option.Dev))
+            applyFilter((_, s) => s match {
+              case Scope.Main => true
+              case Scope.Test => false
+            })
 
           def addEdge(scope: Scope): Unit = {
-            libs += e.fromLib
-            libs += e.toLib
-            dot += s"${e.fromLib.id} -> ${e.toLib.id}"
-            if (e.optional)
+            libs += d.fromLib
+            libs += d.toLib
+            dot += s"${d.fromLib.id} -> ${d.toLib.id}"
+            if (d.optional)
               dot += "[style=dashed color=purple1]"
             scope match {
               case Scope.Main =>
@@ -134,7 +144,7 @@ object LibrariesComponent {
           }
 
           if (allow)
-            addEdge(e.fromScope & e.toScope)
+            addEdge(d.fromScope & d.toScope)
         }
         (dot, libs)
       }
