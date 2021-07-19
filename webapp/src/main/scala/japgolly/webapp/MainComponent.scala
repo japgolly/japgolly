@@ -24,7 +24,10 @@ object MainComponent {
   final class Backend($: BackendScope[Props, State]) {
     def render(s: State): VdomElement = {
       val ssLibs = StateSnapshot.zoomL(State.libs)(s).setStateVia($)
-      LibrariesComponent.Component(ssLibs)
+      <.div(
+        ^.margin := "2rem 0",
+        LibrariesComponent.Component(ssLibs),
+      )
     }
   }
 

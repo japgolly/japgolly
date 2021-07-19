@@ -5,6 +5,10 @@ import japgolly.webapp.CssSettings._
 class Styles extends StyleSheet.Inline {
   import dsl._
 
+  val header = style(
+    textAlign.center,
+  )
+
   val options = style(
     width(100 %%),
     textAlign.center,

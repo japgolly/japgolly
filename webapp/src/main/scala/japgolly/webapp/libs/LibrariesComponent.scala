@@ -35,9 +35,16 @@ object LibrariesComponent {
     )
   }
 
+  // ===================================================================================================================
+
   final class Backend {
 
     val * = Styles.get()
+
+    private val renderHeader =
+      <.h2(
+        *.header,
+        "@japgolly Scala libraries")
 
     private def renderOptions(ss: StateSnapshot[Set[Option]]): VdomNode = {
       def renderOption(o: Option, label: VdomNode) = {
@@ -163,6 +170,7 @@ object LibrariesComponent {
 
     def render(ss: Props): VdomElement =
       <.div(
+        renderHeader,
         renderOptions(ss.zoomStateL(State.opts)),
         <.div(*.graphContainer, GraphvizReact(renderToDot(ss.value.opts))),
       )
