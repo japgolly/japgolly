@@ -6,9 +6,23 @@ final case class ScalaLibraries(libs: Set[Lib], deps: Set[Dep])
 
 object ScalaLibraries {
 
-  final case class Lib(id: Int, repoName: String, scalaVersions: Set[String], tags: Set[Tag])
+  final case class Lib(id: Int, repoName: String, scalaVersions: Set[ScalaVer], tags: Set[Tag]) {
+    val verStrs = scalaVersions.iterator.map(_.ver).toVector.sorted
+    val scala3 = scalaVersions.exists(_.ver startsWith "3")
+    def apply(t: Tag): Boolean = tags contains t
+  }
 
-  sealed trait Scope
+  sealed trait Scope {
+    import Scope._
+
+    def &(s: Scope): Scope =
+      (this, s) match {
+        case (Main, Main) => Main
+        case (Main, Test) => Test
+        case (Test, Main) => Test
+        case (Test, Test) => Test
+      }
+  }
   object Scope {
     case object Main extends Scope
     case object Test extends Scope
@@ -18,6 +32,13 @@ object ScalaLibraries {
   object Tag {
     case object App extends Tag
     case object Scalaz extends Tag
+  }
+
+  sealed abstract class ScalaVer(final val ver: String)
+  object ScalaVer {
+    case object v2_12 extends ScalaVer("2.12")
+    case object v2_13 extends ScalaVer("2.13")
+    case object v3_0 extends ScalaVer("3.0")
   }
 
   final case class Dep(fromLib: Lib, fromScope: Scope, toLib: Lib, toScope: Scope, optional: Boolean)
@@ -56,10 +77,10 @@ object ScalaLibraries {
     }
 
     def lib(repoName: String, scalaVersions: String, tags: Tag*): MLib = {
-      val scalaVerSet = scalaVersions.split(',').map {
-        case "12" => "2.12"
-        case "13" => "2.13"
-        case "3"  => "3.0"
+      val scalaVerSet = scalaVersions.split(',').map[ScalaVer] {
+        case "12" => ScalaVer.v2_12
+        case "13" => ScalaVer.v2_13
+        case "3"  => ScalaVer.v3_0
       }.toSet
       state.prevId += 1
       val id = state.prevId
