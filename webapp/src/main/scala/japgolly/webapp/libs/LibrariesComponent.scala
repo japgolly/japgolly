@@ -184,7 +184,7 @@ object LibrariesComponent {
     def renderGraph(s: State) =
       <.div.withRef(graphRef)(
         *.graphContainer,
-        GraphComponent.Props(renderToDot(s.opts), enrichGraph.logAround("enrich")).render)
+        GraphComponent.Props(renderToDot(s.opts), enrichGraph).render)
 
     lazy val enrichGraph: Callback =
       for {

@@ -14,8 +14,12 @@ object GraphComponent {
 
   final class Backend($: BackendScope[Props, String]) {
 
-    def render(id: String) =
-      <.div(^.id := id)
+    private var prevKey = 0
+
+    def render(id: String) = {
+      prevKey += 1
+      <.div(^.id := id, ^.key := prevKey)
+    }
 
     val renderGraph: Callback =
       for {
