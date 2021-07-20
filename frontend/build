@@ -2,5 +2,29 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-rm -rf dist
-node_modules/.bin/webpack --progress --color
+webpack="node_modules/.bin/webpack --progress --color --config"
+
+valid_targets=(dev prod)
+
+args="$@"
+[ $# -eq 0 ] && args="${valid_targets[@]}"
+
+for mode in ${args[@]}; do
+  echo "--------------------------------------------------------------------------------"
+  echo "[$mode]"
+  case "$mode" in
+
+    dev|prod)
+      dist=dist/$mode
+      rm -rf $dist
+      $webpack webpack/$mode.js
+      dos2unix $dist/*.js
+      echo
+      ;;
+
+    *)
+      echo "What?"
+      echo "Valid targets are: ${valid_targets[@]}"
+  esac
+  echo
+done
