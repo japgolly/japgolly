@@ -15,6 +15,7 @@ function link {
 link bin/serve.py
 link frontend/dist/deps.js
 link frontend/dist/deps.js.map
+link frontend/dist/graphvizlib.wasm
 link webapp/src/main/html/index.html
 link webapp/target/scala-2.13/webapp-fastopt.js
 link webapp/target/scala-2.13/webapp-fastopt.js.map
