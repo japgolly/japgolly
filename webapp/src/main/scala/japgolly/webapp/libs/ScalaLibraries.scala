@@ -1,15 +1,23 @@
 package japgolly.webapp.libs
 
+import japgolly.scalajs.react.AsyncCallback
 import japgolly.webapp.libs.ScalaLibraries._
 
-final case class ScalaLibraries(libs: Set[Lib], deps: Set[Dep])
+final case class ScalaLibraries(libs: Set[Lib], deps: Set[Dep]) {
+  val libById: Int => Lib =
+    libs.iterator.map(l => l.id -> l).toMap.apply
+}
 
 object ScalaLibraries {
 
-  final case class Lib(id: Int, repoName: String, scalaVersions: Set[ScalaVer], tags: Set[Tag]) {
+  final case class Lib(id           : Int,
+                       repoName     : String,
+                       scalaVersions: Set[ScalaVer],
+                       tags         : Set[Tag]) {
     val verStrs = scalaVersions.iterator.map(_.ver).toVector.sorted
     val scala3 = scalaVersions.exists(_.ver startsWith "3")
     def apply(t: Tag): Boolean = tags contains t
+    val url = "https://github.com/japgolly/" + repoName
   }
 
   sealed trait Scope {
@@ -115,4 +123,15 @@ object ScalaLibraries {
       deps = state.deps.toSet,
     )
   }
+
+  // ===================================================================================================================
+
+  final class Metadata(meta: Map[Int, LibMeta]) {
+    def apply(lib: Lib) = meta(lib.id)
+  }
+
+  final case class LibMeta(desc: String)
+
+  def fetchMetadata(manifest: ScalaLibraries): AsyncCallback[Metadata] =
+    AsyncCallback.pure(new Metadata(null))
 }

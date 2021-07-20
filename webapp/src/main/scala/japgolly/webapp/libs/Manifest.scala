@@ -42,4 +42,7 @@ object Manifest {
 
     result()
   }
+
+  val metadata =
+    ScalaLibraries.fetchMetadata(scalaLibraries).memo()
 }

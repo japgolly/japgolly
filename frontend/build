@@ -4,3 +4,4 @@ cd "$(dirname "$0")"
 
 rm -rf dist
 node_modules/.bin/webpack --progress --color
+dos2unix dist/*.{js,map}

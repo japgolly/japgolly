@@ -4,32 +4,36 @@ import japgolly.scalajs.react.ReactMonocle._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.vdom.html_<^._
-import japgolly.webapp.facades.GraphvizReact
+import japgolly.webapp.util.DomUtil._
 import monocle.macros.GenLens
+import org.scalajs.dom.document
+import org.scalajs.dom.raw.{Element, HTMLDivElement, SVGGElement}
 import scalacss.ScalaCssReact._
 
 object LibrariesComponent {
 
   type Props = StateSnapshot[State]
 
-  final case class State(opts: Set[Option])
+  final case class State(opts: Set[Opt], meta: Option[ScalaLibraries.Metadata])
 
   object State {
     def init = apply(
-      Set(Option.Optional),
+      opts = Set(Opt.Optional),
+      meta = None,
     )
+
     val opts = GenLens[State](_.opts)
   }
 
-  sealed trait Option
-  object Option {
-    case object Optional  extends Option
-    case object Dev       extends Option
-    case object Apps      extends Option
-    case object ScalaVers extends Option
-    case object Scalaz    extends Option
+  sealed trait Opt
+  object Opt {
+    case object Optional  extends Opt
+    case object Dev       extends Opt
+    case object Apps      extends Opt
+    case object ScalaVers extends Opt
+    case object Scalaz    extends Opt
 
-    val mutallyExclusive = Set[Set[Option]](
+    val mutallyExclusive = Set[Set[Opt]](
       Set(Dev, Optional),
       Set(ScalaVers, Scalaz),
     )
@@ -37,17 +41,24 @@ object LibrariesComponent {
 
   // ===================================================================================================================
 
-  final class Backend {
+  final class Backend($: BackendScope[Props, Unit]) {
 
     val * = Styles.get()
+
+    val loadMetadata: AsyncCallback[Unit] =
+      for {
+        m <- Manifest.metadata
+        p <- $.props.asAsyncCallback
+        _ <- p.modStateAsync(_.copy(meta = Some(m)))
+      } yield ()
 
     private val renderHeader =
       <.h2(
         *.header,
         "@japgolly Scala libraries")
 
-    private def renderOptions(ss: StateSnapshot[Set[Option]]): VdomNode = {
-      def renderOption(o: Option, label: VdomNode) = {
+    private def renderOpts(ss: StateSnapshot[Set[Opt]]): VdomNode = {
+      def renderOpt(o: Opt, label: VdomNode) = {
         val on = ss.value.contains(o)
         val toggle =
           if (on)
@@ -55,7 +66,7 @@ object LibrariesComponent {
           else
             ss.modState { s0 =>
               var s = s0
-              for (e <- Option.mutallyExclusive)
+              for (e <- Opt.mutallyExclusive)
                 if (e.contains(o))
                   s --= e
               s + o
@@ -69,19 +80,19 @@ object LibrariesComponent {
 
       <.div(
         *.options,
-        renderOption(Option.Optional,  "Show optional deps"),
-        renderOption(Option.Dev,       "Show dev deps"),
-        renderOption(Option.Apps,      "Show apps (as well as libraries)"),
-        renderOption(Option.ScalaVers, "Show Scala versions"),
-        renderOption(Option.Scalaz,    "Still on/supports Scalaz"),
+        renderOpt(Opt.Optional,  "Show optional deps"),
+        renderOpt(Opt.Dev,       "Show dev deps"),
+        renderOpt(Opt.Apps,      "Show apps (as well as libraries)"),
+        renderOpt(Opt.ScalaVers, "Show Scala versions"),
+        renderOpt(Opt.Scalaz,    "Still on/supports Scalaz"),
       )
     }
 
-    private def renderToDot(opts: Set[Option]): String = {
+    private def renderToDot(opts: Set[Opt]): String = {
       import ScalaLibraries._
 
       def allowLib(l: Lib): Boolean =
-        (opts.contains(Option.Apps) || !l(Tag.App))
+        (opts.contains(Opt.Apps) || !l(Tag.App))
 
       def renderNodes(libs: Set[Lib]): String = {
         val _ = libs // unused for now
@@ -91,7 +102,7 @@ object LibrariesComponent {
             dot += l.id.toString
             var name = l.repoName
 
-            if (opts.contains(Option.ScalaVers)) {
+            if (opts.contains(Opt.ScalaVers)) {
               name += "\\nScala vers: " + l.verStrs.mkString(", ")
               if (!l.scala3)
                 dot += "[fillcolor=gray]"
@@ -102,12 +113,12 @@ object LibrariesComponent {
               dot += "[fillcolor=lightblue1]"
             }
 
-            if (opts.contains(Option.Scalaz) && l(Tag.Scalaz)) {
+            if (opts.contains(Opt.Scalaz) && l(Tag.Scalaz)) {
               name += "\\nStill on/supports Scalaz"
               dot += "[fillcolor=orange]"
             }
 
-            dot += s"[label=\"${name}\"]"
+            dot += s"[id=${l.id} label=\"${name}\"]"
             dot += '\n'
           }
         dot
@@ -118,7 +129,7 @@ object LibrariesComponent {
         var libs = Set.empty[Lib]
         var deps = Manifest.scalaLibraries.deps
 
-        if (opts.contains(Option.Dev)) {
+        if (opts.contains(Opt.Dev)) {
           deps = deps.map(_.copy(fromScope = Scope.Main, toScope = Scope.Main, optional = false))
         }
 
@@ -129,9 +140,9 @@ object LibrariesComponent {
             allow &&= f(d.fromLib, d.fromScope)
             allow &&= f(d.toLib, d.toScope)
           }
-          if (!opts.contains(Option.Optional))
+          if (!opts.contains(Opt.Optional))
             allow &&= !d.optional
-          if (!opts.contains(Option.Dev))
+          if (!opts.contains(Opt.Dev))
             applyFilter((_, s) => s match {
               case Scope.Main => true
               case Scope.Test => false
@@ -168,15 +179,56 @@ object LibrariesComponent {
          |""".stripMargin.trim
     }
 
+    val graphRef = Ref[HTMLDivElement]
+
+    def renderGraph(s: State) =
+      <.div.withRef(graphRef)(
+        *.graphContainer,
+        GraphComponent.Props(renderToDot(s.opts), enrichGraph.logAround("enrich")).render)
+
+    lazy val enrichGraph: Callback =
+      for {
+        div <- graphRef.get.asCBO
+        p   <- $.props.toCBO
+      } yield {
+        val meta = p.value.meta
+
+        for (node <- div.querySelectorAll("g.node").iterator.map(_.domCast[SVGGElement])) {
+
+          val id = node.id.toInt
+          val lib = Manifest.scalaLibraries.libById(id)
+
+          // Set title
+          val titleEl =
+            node.childNodes.iterator.flatMap {
+              case e: Element if e.tagName.toLowerCase == "title" => e :: Nil
+              case _ => Nil
+            }.next()
+          titleEl.textContent = meta.fold("desc loading")(_(lib).desc)
+
+          // Make link
+          val parent = node.parentNode
+          if (parent.nodeName.toUpperCase != "A") {
+            val a = document.createElementNS(SvgNS, "a")
+            a.setAttributeNS(XlinkNS, "xlink:href", lib.url)
+            a.setAttribute("opener", null)
+            a.setAttribute("target", "_blank")
+            parent.replaceChild(a, node)
+            a.appendChild(node)
+          }
+        }
+      }
+
     def render(ss: Props): VdomElement =
       <.div(
         renderHeader,
-        renderOptions(ss.zoomStateL(State.opts)),
-        <.div(*.graphContainer, GraphvizReact(renderToDot(ss.value.opts))),
+        renderOpts(ss.zoomStateL(State.opts)),
+        renderGraph(ss.value),
       )
   }
 
   val Component = ScalaComponent.builder[Props]
     .renderBackend[Backend]
+    // .componentDidMount(_.backend.loadMetadata)
     .build
 }

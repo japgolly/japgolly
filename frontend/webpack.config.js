@@ -21,6 +21,8 @@ module.exports = {
     libraryTarget: 'this',
   },
 
+  devtool: 'source-map',
+
   resolve: {
     modules: [
       NodeModules,

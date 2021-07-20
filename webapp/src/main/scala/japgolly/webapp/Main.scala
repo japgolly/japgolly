@@ -10,6 +10,9 @@ object Main {
   @JSExportTopLevel("main")
   def main(): Unit = {
 
+    // Global settings
+    japgolly.scalajs.react.util.JsUtil.setStackTraceLimit(100)
+
     // Register styles
     GlobalRegistry.addToDocumentOnRegistration()
     GlobalRegistry.register(new libs.Styles)
