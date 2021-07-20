@@ -1,8 +1,10 @@
 const
   Path = require('path'),
+  Webpack = require('webpack'),
+  TerserPlugin = require('terser-webpack-plugin'),
   NodeModules = Path.resolve(__dirname, '../node_modules');
 
-const config = ({ mode }) => ({
+module.exports = {
 
   entry: './src/deps.js',
 
@@ -14,7 +16,7 @@ const config = ({ mode }) => ({
 
   output: {
     filename: 'deps.js',
-    path: Path.resolve(__dirname, '..', 'dist', mode),
+    path: Path.resolve(__dirname, 'dist'),
     library: 'Deps',
     libraryTarget: 'this',
   },
@@ -31,7 +33,28 @@ const config = ({ mode }) => ({
     ],
   },
 
-  bail: true,
-})
+  mode: 'production',
 
-module.exports = config
+  performance: {
+    hints: false
+  },
+
+  optimization: {
+    minimizer: [new TerserPlugin({
+      parallel: true,
+      terserOptions: {
+        output: {
+          comments: false,
+        }
+      },
+    })]
+  },
+
+  plugins: [
+    new Webpack.LoaderOptionsPlugin({
+      minimize: true,
+    }),
+  ],
+
+  bail: true,
+}
