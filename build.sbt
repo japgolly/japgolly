@@ -89,4 +89,5 @@ lazy val webapp = project
       Dep.scalaJsReactMonocle.value,
       Dep.univEq.value,
     ),
+    fullOptJS / scalaJSLinkerConfig ~= { _.withSourceMap(false) },
   )
