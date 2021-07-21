@@ -204,7 +204,7 @@ object LibrariesComponent {
               case e: Element if e.tagName.toLowerCase == "title" => e :: Nil
               case _ => Nil
             }.next()
-          titleEl.textContent = meta.fold("desc loading")(_(lib).desc)
+          titleEl.textContent = meta.fold("desc loading")(_(lib).desc.getOrElse(lib.repoName))
 
           // Make link
           val parent = node.parentNode
@@ -229,6 +229,6 @@ object LibrariesComponent {
 
   val Component = ScalaComponent.builder[Props]
     .renderBackend[Backend]
-    // .componentDidMount(_.backend.loadMetadata)
+    .componentDidMount(_.backend.loadMetadata)
     .build
 }

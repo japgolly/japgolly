@@ -7,19 +7,19 @@ object Manifest {
     import mutable._
     import ScalaLibraries.Tag._
 
-    val clearConfig      = lib("clear-config",      "12,13"  , Scalaz)
-    val japgolly         = lib("japgolly",             "13"  , App)
-    val microlibs        = lib("microlibs",         "12,13,3", Scalaz)
-    val mrBoilerplate    = lib("mr.boilerplate",    "12,13"  , App)
-    val nyaya            = lib("nyaya",             "12,13,3", Scalaz)
-    val scalacss         = lib("scalacss",          "12,13"  , Scalaz)
-    val scalaGraal       = lib("scala-graal",       "12,13"  , Scalaz)
-    val scalajsBenchmark = lib("scalajs-benchmark", "12,13"  , Scalaz)
-    val scalajsReact     = lib("scalajs-react",        "13,3")
-    val testState        = lib("test-state",        "12,13"  , Scalaz)
-    val tla2json         = lib("tla2json",             "13"  , App)
-    val univeq           = lib("univeq",            "12,13,3", Scalaz)
-    val webappUtil       = lib("webapp-util",          "13"  , Scalaz)
+    val clearConfig      = lib("clear-config",      "clear-config",      "12,13"  , Scalaz)
+    val japgolly         = lib("japgolly",          "japgolly",             "13"  , App)
+    val microlibs        = lib("microlibs-scala",   "microlibs",         "12,13,3", Scalaz)
+    val mrBoilerplate    = lib("mr.boilerplate",    "mr.boilerplate",    "12,13"  , App)
+    val nyaya            = lib("nyaya",             "nyaya",             "12,13,3", Scalaz)
+    val scalacss         = lib("scalacss",          "scalacss",          "12,13"  , Scalaz)
+    val scalaGraal       = lib("scala-graal",       "scala-graal",       "12,13"  , Scalaz)
+    val scalajsBenchmark = lib("scalajs-benchmark", "scalajs-benchmark", "12,13"  , Scalaz)
+    val scalajsReact     = lib("scalajs-react",     "scalajs-react",        "13,3")
+    val testState        = lib("test-state",        "test-state",        "12,13"  , Scalaz)
+    val tla2json         = lib("tla2json",          "tla2json",             "13"  , App)
+    val univeq           = lib("univeq",            "univeq",            "12,13,3", Scalaz)
+    val webappUtil       = lib("webapp-util",       "webapp-util",          "13"  , Scalaz)
 
     clearConfig       <-- (microlibs)
     microlibs         <-? (univeq)
@@ -44,5 +44,7 @@ object Manifest {
   }
 
   val metadata =
-    ScalaLibraries.fetchMetadata(scalaLibraries).memo()
+    ScalaLibraries.fetchMetadata(scalaLibraries)
+      .map(_.modify(scalaLibraries("japgolly"))(_.copy(desc = Some("This little webapp you're looking at right now"))))
+      .memo()
 }

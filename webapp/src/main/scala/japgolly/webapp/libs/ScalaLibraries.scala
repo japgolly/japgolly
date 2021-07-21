@@ -1,9 +1,15 @@
 package japgolly.webapp.libs
 
-import japgolly.scalajs.react.AsyncCallback
+import japgolly.scalajs.react._
 import japgolly.webapp.libs.ScalaLibraries._
+import scala.scalajs.js.JSON
+import japgolly.scalajs.react.extra.Ajax
 
 final case class ScalaLibraries(libs: Set[Lib], deps: Set[Dep]) {
+
+  def apply(repoName: String): Lib =
+    libs.find(_.repoName == repoName).get
+
   val libById: Int => Lib =
     libs.iterator.map(l => l.id -> l).toMap.apply
 }
@@ -12,6 +18,7 @@ object ScalaLibraries {
 
   final case class Lib(id           : Int,
                        repoName     : String,
+                       displayName  : String,
                        scalaVersions: Set[ScalaVer],
                        tags         : Set[Tag]) {
     val verStrs = scalaVersions.iterator.map(_.ver).toVector.sorted
@@ -84,7 +91,7 @@ object ScalaLibraries {
       final def test = withScope(Test)
     }
 
-    def lib(repoName: String, scalaVersions: String, tags: Tag*): MLib = {
+    def lib(repoName: String, displayName: String, scalaVersions: String, tags: Tag*): MLib = {
       val scalaVerSet = scalaVersions.split(',').map[ScalaVer] {
         case "12" => ScalaVer.v2_12
         case "13" => ScalaVer.v2_13
@@ -92,7 +99,7 @@ object ScalaLibraries {
       }.toSet
       state.prevId += 1
       val id = state.prevId
-      val l = Lib(id, repoName, scalaVerSet, tags.toSet)
+      val l = Lib(id, repoName, displayName, scalaVerSet, tags.toSet)
       state.libs ::= l
       def mkWithScope(s: Scope): MLib =
         new MLib {
@@ -128,10 +135,24 @@ object ScalaLibraries {
 
   final class Metadata(meta: Map[Int, LibMeta]) {
     def apply(lib: Lib) = meta(lib.id)
+    def modify(lib: Lib)(f: LibMeta => LibMeta) = new Metadata(meta.updated(lib.id, f(apply(lib))))
   }
 
-  final case class LibMeta(desc: String)
+  final case class LibMeta(desc: Option[String])
 
-  def fetchMetadata(manifest: ScalaLibraries): AsyncCallback[Metadata] =
-    AsyncCallback.pure(new Metadata(null))
+  def fetchMetadata(manifest: ScalaLibraries): AsyncCallback[Metadata] = {
+
+    def fetch(lib: Lib): AsyncCallback[LibMeta] =
+      Ajax("GET", s"https://api.github.com/repos/japgolly/${lib.repoName}")
+        .setRequestContentTypeJsonUtf8
+        .setRequestHeader("Accept", "application/vnd.github.v3+json")
+        .send
+        .validateStatusIs(200)(Callback.throwException(_))
+        .asAsyncCallback
+        .map(xhr => JSON.parse(xhr.responseText))
+        .map(r => LibMeta(Option(r.description.asInstanceOf[String])))
+
+    AsyncCallback.traverse(manifest.libs.toList)(l => fetch(l).map((l.id, _)))
+      .map(m => new Metadata(m.toMap))
+  }
 }
