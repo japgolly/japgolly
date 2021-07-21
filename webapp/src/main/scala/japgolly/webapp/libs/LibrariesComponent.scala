@@ -18,7 +18,7 @@ object LibrariesComponent {
 
   object State {
     def init = apply(
-      opts = Set(Opt.Optional),
+      opts = Set(),
       meta = None,
     )
 
