@@ -9,7 +9,7 @@ object Manifest {
 
     val clearConfig      = lib("clear-config",      "clear-config",      "12,13"  , Scalaz)
     val japgolly         = lib("japgolly",          "japgolly",             "13"  , App)
-    val microlibs        = lib("microlibs-scala",   "microlibs",         "12,13,3", Scalaz)
+    val microlibs        = lib("microlibs-scala",   "microlibs",            "13,3")
     val mrBoilerplate    = lib("mr.boilerplate",    "mr.boilerplate",    "12,13"  , App)
     val nyaya            = lib("nyaya",             "nyaya",             "12,13,3", Scalaz)
     val scalacss         = lib("scalacss",          "scalacss",          "12,13"  , Scalaz)
@@ -22,10 +22,10 @@ object Manifest {
     val webappUtil       = lib("webapp-util",       "webapp-util",          "13"  , Scalaz)
 
     clearConfig       <-- (microlibs)
-    microlibs         <-? (univeq)
-    microlibs.test    <-- (nyaya)
-    mrBoilerplate     <-- (microlibs & scalajsReact & univeq)
     japgolly          <-- (scalacss & scalajsReact & univeq)
+    microlibs         <-? (univeq)
+    mrBoilerplate     <-- (microlibs & scalajsReact & univeq)
+    nyaya             <-- microlibs
     scalacss          <-- (univeq)
     scalacss          <-? (scalajsReact)
     scalacss.test     <-- (microlibs & nyaya)
