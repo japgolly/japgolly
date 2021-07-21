@@ -100,7 +100,7 @@ object LibrariesComponent {
         for (l <- Manifest.scalaLibraries.libs)
           if (allowLib(l)) {
             dot += l.id.toString
-            var name = l.repoName
+            var name = l.displayName
 
             if (opts.contains(Opt.ScalaVers)) {
               name += "\\nScala vers: " + l.verStrs.mkString(", ")
