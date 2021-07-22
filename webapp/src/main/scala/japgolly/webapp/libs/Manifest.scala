@@ -11,7 +11,7 @@ object Manifest {
     val japgolly         = lib("japgolly",          "japgolly",             "13"  , App)
     val microlibs        = lib("microlibs-scala",   "microlibs",            "13,3")
     val mrBoilerplate    = lib("mr.boilerplate",    "mr.boilerplate",    "12,13"  , App)
-    val nyaya            = lib("nyaya",             "nyaya",             "12,13,3", Scalaz)
+    val nyaya            = lib("nyaya",             "nyaya",                "13,3")
     val scalacss         = lib("scalacss",          "scalacss",          "12,13"  , Scalaz)
     val scalaGraal       = lib("scala-graal",       "scala-graal",       "12,13"  , Scalaz)
     val scalajsBenchmark = lib("scalajs-benchmark", "scalajs-benchmark", "12,13"  , Scalaz)
