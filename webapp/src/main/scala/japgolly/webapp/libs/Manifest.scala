@@ -18,7 +18,7 @@ object Manifest {
     val scalajsReact     = lib("scalajs-react",     "scalajs-react",        "13,3")
     val testState        = lib("test-state",        "test-state",        "12,13"  , Scalaz)
     val tla2json         = lib("tla2json",          "tla2json",             "13"  , App)
-    val univeq           = lib("univeq",            "univeq",            "12,13,3", Scalaz)
+    val univeq           = lib("univeq",            "univeq",               "13,3")
     val webappUtil       = lib("webapp-util",       "webapp-util",          "13"  , Scalaz)
 
     clearConfig       <-- (microlibs)

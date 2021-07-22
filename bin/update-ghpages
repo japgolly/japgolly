@@ -21,4 +21,5 @@ cp webapp/target/scala-2.13/webapp-opt.js ghpages/webapp.js
 git add index.html ghpages/webapp.js
 echo
 echo 'git commit -m "Update gh-pages"'
+echo 'git push'
 echo
