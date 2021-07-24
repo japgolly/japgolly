@@ -114,7 +114,7 @@ object LibrariesComponent {
             }
 
             if (l.tags.contains(Tag.App)) {
-              name = s"[app] $name"
+              name = s"[app]\\n$name"
               dot += "[fillcolor=lightblue1]"
             }
 
