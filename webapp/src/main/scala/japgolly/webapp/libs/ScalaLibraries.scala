@@ -1,10 +1,11 @@
 package japgolly.webapp.libs
 
 import japgolly.scalajs.react._
+import japgolly.scalajs.react.extra.Ajax
 import japgolly.webapp.libs.ScalaLibraries._
+import japgolly.webapp.util.AbstractWebStorage
 import scala.scalajs.js
 import scala.scalajs.js.JSON
-import japgolly.scalajs.react.extra.Ajax
 
 final case class ScalaLibraries(libs: Set[Lib], deps: Set[Dep]) {
 
@@ -142,6 +143,13 @@ object ScalaLibraries {
   final case class LibMeta(desc: Option[String], latestVer: Option[String])
 
   def fetchMetadata(manifest: ScalaLibraries): AsyncCallback[Metadata] = {
+    import AbstractWebStorage.{Key, Value}
+
+    val ws         = AbstractWebStorage.localOrEmpty()
+    def now()      = System.currentTimeMillis()
+    val hour       = 3_600_000L
+    val cutoff     = now() - hour
+    val releaseFmt = """^\d+(\.\d+)+(-(RC|M)?\d+)?$""".r
 
     def fetch(lib: Lib): AsyncCallback[LibMeta] = {
 
@@ -153,40 +161,68 @@ object ScalaLibraries {
         def name: String
       }
 
-      val fetchRepo =
-        Ajax("GET", s"https://api.github.com/repos/japgolly/${lib.repoName}")
-          .setRequestContentTypeJsonUtf8
-          .setRequestHeader("Accept", "application/vnd.github.v3+json")
-          .send
-          .validateStatusIs(200)(Callback.throwException(_))
-          .asAsyncCallback
-          .map(xhr => JSON.parse(xhr.responseText).asInstanceOf[RepoResult])
+      type TagsResult = js.Array[TagResult]
 
-      val fetchTags: AsyncCallback[js.Array[TagResult]] =
-        if (lib.tags.contains(Tag.App))
-          AsyncCallback.pure(new js.Array)
-        else
-          Ajax("GET", s"https://api.github.com/repos/japgolly/${lib.repoName}/tags")
+      def parseTag(tag: TagResult): Option[String] = {
+        var t = tag.name
+        if (t.startsWith("v")) t = t.drop(1)
+        Option.when(releaseFmt.matches(t))(t)
+      }
+
+      trait CachedRequest extends js.Object {
+        val timeMs: String
+        val response: String
+      }
+      object CachedRequest {
+        def decode(s: Value): CachedRequest = JSON.parse(s.value).asInstanceOf[CachedRequest]
+        def encode(r: CachedRequest): Value = Value(JSON.stringify(r))
+      }
+
+      def cachedAjax(url: String)(real: AsyncCallback[String]): AsyncCallback[String] = {
+        val key = Key(url)
+        ws.getItem(key).asAsyncCallback
+          .map(_.map(CachedRequest.decode))
+          .attempt
+          .flatMap {
+            case Right(Some(c)) if c.timeMs.toLong > cutoff =>
+              AsyncCallback.pure(c.response)
+            case _ =>
+              for {
+                s <- real
+                _ <- ws.setItem(key, CachedRequest.encode(new CachedRequest {
+                       override val timeMs = now().toString
+                       override val response = s
+                     })).asAsyncCallback
+              } yield s
+          }
+      }
+
+      def githubApi[A](url: String): AsyncCallback[A] =
+        cachedAjax(url)(
+          Ajax("GET", url)
             .setRequestContentTypeJsonUtf8
             .setRequestHeader("Accept", "application/vnd.github.v3+json")
+            .setRequestHeader("User-Agent", "github.com/japgolly/japgolly")
             .send
             .validateStatusIs(200)(Callback.throwException(_))
             .asAsyncCallback
-            .map(xhr => JSON.parse(xhr.responseText).asInstanceOf[js.Array[TagResult]])
+            .map(_.responseText)
+        )
+        .map(JSON.parse(_).asInstanceOf[A])
 
-      fetchRepo.zip(fetchTags).map { case (repo, tags) =>
+      val fetchRepo =
+        githubApi[RepoResult](s"https://api.github.com/repos/japgolly/${lib.repoName}")
 
-        val releaseFmt = """^\d+(\.\d+)+(-(RC|M)?\d+)?$""".r
+      val fetchTags: AsyncCallback[TagsResult] =
+        if (lib.tags.contains(Tag.App))
+          AsyncCallback.pure(new js.Array)
+        else
+          githubApi[TagsResult](s"https://api.github.com/repos/japgolly/${lib.repoName}/tags")
 
-        def parseTag(tag: TagResult): Option[String] = {
-          var t = tag.name
-          if (t.startsWith("v")) t = t.drop(1)
-          Option.when(releaseFmt.matches(t))(t)
-        }
-
+      (fetchRepo.attempt).zip(fetchTags.attempt).map { case (repo, tags) =>
         LibMeta(
-          desc = Option(repo.description),
-          latestVer = tags.iterator.flatMap(parseTag).nextOption(),
+          desc      = repo.toOption.flatMap(r => Option(r.description)),
+          latestVer = tags.toOption.flatMap(_.iterator.flatMap(parseTag).nextOption()),
         )
       }
     }
