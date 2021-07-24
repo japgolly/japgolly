@@ -2,6 +2,7 @@ package japgolly.webapp.libs
 
 import japgolly.scalajs.react._
 import japgolly.webapp.libs.ScalaLibraries._
+import scala.scalajs.js
 import scala.scalajs.js.JSON
 import japgolly.scalajs.react.extra.Ajax
 
@@ -138,19 +139,57 @@ object ScalaLibraries {
     def modify(lib: Lib)(f: LibMeta => LibMeta) = new Metadata(meta.updated(lib.id, f(apply(lib))))
   }
 
-  final case class LibMeta(desc: Option[String])
+  final case class LibMeta(desc: Option[String], latestVer: Option[String])
 
   def fetchMetadata(manifest: ScalaLibraries): AsyncCallback[Metadata] = {
 
-    def fetch(lib: Lib): AsyncCallback[LibMeta] =
-      Ajax("GET", s"https://api.github.com/repos/japgolly/${lib.repoName}")
-        .setRequestContentTypeJsonUtf8
-        .setRequestHeader("Accept", "application/vnd.github.v3+json")
-        .send
-        .validateStatusIs(200)(Callback.throwException(_))
-        .asAsyncCallback
-        .map(xhr => JSON.parse(xhr.responseText))
-        .map(r => LibMeta(Option(r.description.asInstanceOf[String])))
+    def fetch(lib: Lib): AsyncCallback[LibMeta] = {
+
+      trait RepoResult extends js.Object {
+        def description: String
+      }
+
+      trait TagResult extends js.Object {
+        def name: String
+      }
+
+      val fetchRepo =
+        Ajax("GET", s"https://api.github.com/repos/japgolly/${lib.repoName}")
+          .setRequestContentTypeJsonUtf8
+          .setRequestHeader("Accept", "application/vnd.github.v3+json")
+          .send
+          .validateStatusIs(200)(Callback.throwException(_))
+          .asAsyncCallback
+          .map(xhr => JSON.parse(xhr.responseText).asInstanceOf[RepoResult])
+
+      val fetchTags: AsyncCallback[js.Array[TagResult]] =
+        if (lib.tags.contains(Tag.App))
+          AsyncCallback.pure(new js.Array)
+        else
+          Ajax("GET", s"https://api.github.com/repos/japgolly/${lib.repoName}/tags")
+            .setRequestContentTypeJsonUtf8
+            .setRequestHeader("Accept", "application/vnd.github.v3+json")
+            .send
+            .validateStatusIs(200)(Callback.throwException(_))
+            .asAsyncCallback
+            .map(xhr => JSON.parse(xhr.responseText).asInstanceOf[js.Array[TagResult]])
+
+      fetchRepo.zip(fetchTags).map { case (repo, tags) =>
+
+        val releaseFmt = """^\d+(\.\d+)+(-(RC|M)?\d+)?$""".r
+
+        def parseTag(tag: TagResult): Option[String] = {
+          var t = tag.name
+          if (t.startsWith("v")) t = t.drop(1)
+          Option.when(releaseFmt.matches(t))(t)
+        }
+
+        LibMeta(
+          desc = Option(repo.description),
+          latestVer = tags.iterator.flatMap(parseTag).nextOption(),
+        )
+      }
+    }
 
     AsyncCallback.traverse(manifest.libs.toList)(l => fetch(l).map((l.id, _)))
       .map(m => new Metadata(m.toMap))

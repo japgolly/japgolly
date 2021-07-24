@@ -88,7 +88,7 @@ object LibrariesComponent {
       )
     }
 
-    private def renderToDot(opts: Set[Opt]): String = {
+    private def renderToDot(opts: Set[Opt], meta: Option[ScalaLibraries.Metadata]): String = {
       import ScalaLibraries._
 
       def allowLib(l: Lib): Boolean =
@@ -101,6 +101,11 @@ object LibrariesComponent {
           if (allowLib(l)) {
             dot += l.id.toString
             var name = l.displayName
+
+            for {
+              m <- meta
+              v <- m(l).latestVer
+            } name += s" v$v"
 
             if (opts.contains(Opt.ScalaVers)) {
               name += "\\nScala vers: " + l.verStrs.mkString(", ")
@@ -184,7 +189,7 @@ object LibrariesComponent {
     def renderGraph(s: State) =
       <.div.withRef(graphRef)(
         *.graphContainer,
-        GraphComponent.Props(renderToDot(s.opts), enrichGraph).render)
+        GraphComponent.Props(renderToDot(s.opts, s.meta), enrichGraph).render)
 
     lazy val enrichGraph: Callback =
       for {
