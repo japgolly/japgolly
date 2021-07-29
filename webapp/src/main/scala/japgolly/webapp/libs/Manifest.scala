@@ -7,7 +7,7 @@ object Manifest {
     import mutable._
     import ScalaLibraries.Tag._
 
-    val clearConfig      = lib("clear-config",      "clear-config",      "12,13"  , Scalaz)
+    val clearConfig      = lib("clear-config",      "clear-config",         "13,3")
     val japgolly         = lib("japgolly",          "japgolly",             "13"  , App)
     val microlibs        = lib("microlibs-scala",   "microlibs",            "13,3")
     val mrBoilerplate    = lib("mr.boilerplate",    "mr.boilerplate",    "12,13"  , App)
