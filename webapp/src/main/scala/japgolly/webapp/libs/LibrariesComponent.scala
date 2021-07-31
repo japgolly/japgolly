@@ -31,11 +31,9 @@ object LibrariesComponent {
     case object Dev       extends Opt
     case object Apps      extends Opt
     case object ScalaVers extends Opt
-    case object Scalaz    extends Opt
 
     val mutallyExclusive = Set[Set[Opt]](
       Set(Dev, Optional),
-      Set(ScalaVers, Scalaz),
     )
   }
 
@@ -84,7 +82,6 @@ object LibrariesComponent {
         renderOpt(Opt.Dev,       "Show dev deps"),
         renderOpt(Opt.Apps,      "Show apps (as well as libraries)"),
         renderOpt(Opt.ScalaVers, "Show Scala versions"),
-        renderOpt(Opt.Scalaz,    "Still on/supports Scalaz"),
       )
     }
 
@@ -116,11 +113,6 @@ object LibrariesComponent {
             if (l.tags.contains(Tag.App)) {
               name = s"[app]\\n$name"
               dot += "[fillcolor=lightblue1]"
-            }
-
-            if (opts.contains(Opt.Scalaz) && l(Tag.Scalaz)) {
-              name += "\\nStill on/supports Scalaz"
-              dot += "[fillcolor=orange]"
             }
 
             dot += s"[id=${l.id} label=\"${name}\"]"

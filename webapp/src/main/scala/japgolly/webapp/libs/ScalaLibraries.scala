@@ -48,7 +48,6 @@ object ScalaLibraries {
   sealed trait Tag
   object Tag {
     case object App extends Tag
-    case object Scalaz extends Tag
   }
 
   sealed abstract class ScalaVer(final val ver: String)
