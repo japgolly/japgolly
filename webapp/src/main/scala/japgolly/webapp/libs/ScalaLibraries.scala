@@ -22,6 +22,7 @@ object ScalaLibraries {
                        repoName     : String,
                        displayName  : String,
                        scalaVersions: Set[ScalaVer],
+                       sjdomVer: ScalaJsDomVer,
                        tags         : Set[Tag]) {
     val verStrs = scalaVersions.iterator.map(_.ver).toVector.sorted
     val scala3 = scalaVersions.exists(_.ver startsWith "3")
@@ -55,6 +56,13 @@ object ScalaLibraries {
     case object v2_12 extends ScalaVer("2.12")
     case object v2_13 extends ScalaVer("2.13")
     case object v3_0 extends ScalaVer("3.0")
+  }
+
+  sealed abstract class ScalaJsDomVer(final val ver: String)
+  object ScalaJsDomVer {
+    case object v1xy extends ScalaJsDomVer("1.x.y")
+    case object v200 extends ScalaJsDomVer("2.0.0")
+    case object none extends ScalaJsDomVer("none")
   }
 
   final case class Dep(fromLib: Lib, fromScope: Scope, toLib: Lib, toScope: Scope, optional: Boolean)
@@ -92,7 +100,7 @@ object ScalaLibraries {
       final def test = withScope(Test)
     }
 
-    def lib(repoName: String, displayName: String, scalaVersions: String, tags: Tag*): MLib = {
+    def lib(repoName: String, displayName: String, scalaVersions: String, sjdomVer: ScalaJsDomVer, tags: Tag*): MLib = {
       val scalaVerSet = scalaVersions.split(',').map[ScalaVer] {
         case "12" => ScalaVer.v2_12
         case "13" => ScalaVer.v2_13
@@ -100,7 +108,7 @@ object ScalaLibraries {
       }.toSet
       state.prevId += 1
       val id = state.prevId
-      val l = Lib(id, repoName, displayName, scalaVerSet, tags.toSet)
+      val l = Lib(id, repoName, displayName, scalaVerSet, sjdomVer, tags.toSet)
       state.libs ::= l
       def mkWithScope(s: Scope): MLib =
         new MLib {
