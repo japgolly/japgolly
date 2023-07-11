@@ -1,10 +1,8 @@
 package japgolly.webapp.facades
 
-import scala.annotation.nowarn
 import scala.scalajs.js
 import scala.scalajs.js.annotation._
 
-@nowarn
 object D3Graphviz {
 
   @JSGlobal("Deps.D3G")

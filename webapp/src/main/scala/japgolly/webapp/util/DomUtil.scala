@@ -7,12 +7,12 @@ object DomUtil {
   val SvgNS = "http://www.w3.org/2000/svg"
   val XlinkNS = "http://www.w3.org/1999/xlink"
 
-  @inline implicit class NodeListExt(private val n: NodeList) extends AnyVal {
+  @inline implicit class NodeListExt[A <: Node](private val n: NodeList[A]) extends AnyVal {
 
-    def iterator: Iterator[Node] =
+    def iterator: Iterator[A] =
       (0 until n.length).iterator.map(n.apply)
 
-    def reverseIterator: Iterator[Node] =
+    def reverseIterator: Iterator[A] =
       (0 until n.length).reverse.iterator.map(n.apply)
   }
 

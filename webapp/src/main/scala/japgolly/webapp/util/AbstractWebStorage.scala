@@ -1,7 +1,7 @@
 package japgolly.webapp.util
 
 import japgolly.scalajs.react.{Callback, CallbackTo, Reusability}
-import org.scalajs.dom.raw.{Storage => StorageJs}
+import org.scalajs.dom.{Storage => StorageJs}
 import scala.scalajs.js
 
 trait AbstractWebStorage {

@@ -6,8 +6,7 @@ import japgolly.scalajs.react.extra.StateSnapshot
 import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.webapp.util.DomUtil._
 import monocle.macros.GenLens
-import org.scalajs.dom.document
-import org.scalajs.dom.raw.{Element, HTMLDivElement, SVGGElement}
+import org.scalajs.dom.{Element, HTMLDivElement, SVGGElement, document}
 import scalacss.ScalaCssReact._
 
 object LibrariesComponent {

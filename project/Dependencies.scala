@@ -7,13 +7,13 @@ object Dependencies {
   object Ver {
 
     val betterMonadicFor = "0.3.1"
-    val kindProjector    = "0.13.0"
-    val monocle          = "3.0.0"
-    val scala            = "2.13.6"
-    val scalaCss         = "0.8.0-M1"
-    val scalaJsDom       = "1.1.0"
-    val scalaJsReact     = "2.0.0-RC2"
-    val univEq           = "1.4.0"
+    val kindProjector    = "0.13.2"
+    val monocle          = "3.2.0"
+    val scala            = "2.13.11"
+    val scalaCss         = "1.0.0"
+    val scalaJsDom       = "2.6.0"
+    val scalaJsReact     = "2.1.1"
+    val univEq           = "2.0.1"
   }
 
   object Dep {
