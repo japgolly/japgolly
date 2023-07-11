@@ -62,6 +62,9 @@ object ScalaLibraries {
   object ScalaJsDomVer {
     case object v1xy extends ScalaJsDomVer("1.x.y")
     case object v200 extends ScalaJsDomVer("2.0.0")
+    case object v220 extends ScalaJsDomVer("2.2.0")
+    case object v230 extends ScalaJsDomVer("2.3.0")
+    case object v260 extends ScalaJsDomVer("2.6.0")
     case object none extends ScalaJsDomVer("none")
   }
 

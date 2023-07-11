@@ -8,19 +8,19 @@ object Manifest {
     import ScalaLibraries.Tag._
     import ScalaLibraries.ScalaJsDomVer._
 
-    val clearConfig      = lib("clear-config",      "clear-config",         "13,3", v1xy)
-    val japgolly         = lib("japgolly",          "japgolly",             "13"  , v1xy, App)
+    val clearConfig      = lib("clear-config",      "clear-config",         "13,3", v200)
+    val japgolly         = lib("japgolly",          "japgolly",             "13"  , v260, App)
     val microlibs        = lib("microlibs-scala",   "microlibs",            "13,3", v200)
     val mrBoilerplate    = lib("mr.boilerplate",    "mr.boilerplate",    "12,13"  , v1xy, App)
-    val nyaya            = lib("nyaya",             "nyaya",                "13,3", v1xy)
-    val scalacss         = lib("scalacss",          "scalacss",             "13,3", v1xy)
-    val scalaGraal       = lib("scala-graal",       "scala-graal",          "13,3", v1xy)
-    val scalajsBenchmark = lib("scalajs-benchmark", "scalajs-benchmark",    "13,3", v1xy)
-    val scalajsReact     = lib("scalajs-react",     "scalajs-react",        "13,3", v1xy)
-    val testState        = lib("test-state",        "test-state",           "13,3", v1xy)
+    val nyaya            = lib("nyaya",             "nyaya",                "13,3", v200)
+    val scalacss         = lib("scalacss",          "scalacss",             "13,3", v200)
+    val scalaGraal       = lib("scala-graal",       "scala-graal",          "13,3", none)
+    val scalajsBenchmark = lib("scalajs-benchmark", "scalajs-benchmark",    "13,3", v200)
+    val scalajsReact     = lib("scalajs-react",     "scalajs-react",        "13,3", v200)
+    val testState        = lib("test-state",        "test-state",           "13,3", v230)
     val tla2json         = lib("tla2json",          "tla2json",             "13"  , none, App)
     val univeq           = lib("univeq",            "univeq",               "13,3", v200)
-    val webappUtil       = lib("webapp-util",       "webapp-util",          "13,3", v1xy)
+    val webappUtil       = lib("webapp-util",       "webapp-util",          "13,3", v220)
 
     clearConfig       <-- (microlibs)
     japgolly          <-- (scalacss & scalajsReact & univeq)
