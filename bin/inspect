@@ -20,11 +20,11 @@ dirs=(
 for f in "${dirs[@]}"; do
   echo "$f ===================================================================================================="
 
-  egrep -h ' %%%? |Dep\.| +% +Test' ../$f/project/*.scala ../$f/*.sbt 2>/dev/null \
-    | egrep -iv 'Def.setting|ompilerPlugin|ProvidedJS|org\.|betterm|kindproj|epfl|"io\.|haoyi|collcompat|chuusai|liancheng|testkit|julien|scalaCompiler|scalaReflect|jamm' \
+  grep -Eh ' %%%? |Dep\.| +% +Test' ../$f/project/*.scala ../$f/*.sbt 2>/dev/null \
+    | grep -Eiv 'Def.setting|ompilerPlugin|ProvidedJS|org\.|betterm|kindproj|epfl|"io\.|haoyi|collcompat|chuusai|liancheng|testkit|julien|scalaCompiler|scalaReflect|jamm' \
     | perl -pe 's/^ +//; s/  +/ /g; s/^val .+?= //;  s/libraryDependencies *\S+ *//; s/[),]+$//; s/\.value//g; s/(Dep|Ver)\.//g; s/ +$//;' \
     | perl -pe 's/^(Seq|\.(?:jsS|s)ettings)\(//' \
-    | egrep -iv '^([um]test|ScalaJsDom|sourcecode|scalatest|cats.*|scalaz)( % Test)?$' \
+    | grep -Eiv '^([um]test|ScalaJsDom|sourcecode|scalatest|cats.*|scalaz)( % Test)?$' \
     | perl -pe 's/ % Test$/ -------------------- Test/' \
     | sort -u
 
