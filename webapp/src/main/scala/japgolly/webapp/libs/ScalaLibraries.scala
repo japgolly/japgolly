@@ -22,12 +22,13 @@ object ScalaLibraries {
                        repoName     : String,
                        displayName  : String,
                        scalaVersions: Set[ScalaVer],
-                       sjdomVer: ScalaJsDomVer,
-                       tags         : Set[Tag]) {
+                       sjdomVer     : ScalaJsDomVer,
+                       tags         : Set[Tag],
+                       orgName      : String) {
     val verStrs = scalaVersions.iterator.map(_.ver).toVector.sorted
     val scala3 = scalaVersions.exists(_.ver startsWith "3")
     def apply(t: Tag): Boolean = tags contains t
-    val url = "https://github.com/japgolly/" + repoName
+    val url = s"https://github.com/$orgName/$repoName"
   }
 
   sealed trait Scope {
@@ -65,6 +66,7 @@ object ScalaLibraries {
     case object v220 extends ScalaJsDomVer("2.2.0")
     case object v230 extends ScalaJsDomVer("2.3.0")
     case object v260 extends ScalaJsDomVer("2.6.0")
+    case object v281 extends ScalaJsDomVer("2.8.1")
     case object none extends ScalaJsDomVer("none")
   }
 
@@ -103,7 +105,14 @@ object ScalaLibraries {
       final def test = withScope(Test)
     }
 
-    def lib(repoName: String, displayName: String, scalaVersions: String, sjdomVer: ScalaJsDomVer, tags: Tag*): MLib = {
+    def lib(
+        repoName: String,
+        displayName: String,
+        scalaVersions: String,
+        sjdomVer: ScalaJsDomVer,
+        tags: Set[Tag],
+        orgName: String = "japgolly"
+    ): MLib = {
       val scalaVerSet = scalaVersions.split(',').map[ScalaVer] {
         case "12" => ScalaVer.v2_12
         case "13" => ScalaVer.v2_13
@@ -111,7 +120,7 @@ object ScalaLibraries {
       }.toSet
       state.prevId += 1
       val id = state.prevId
-      val l = Lib(id, repoName, displayName, scalaVerSet, sjdomVer, tags.toSet)
+      val l = Lib(id, repoName, displayName, scalaVerSet, sjdomVer, tags, orgName = orgName)
       state.libs ::= l
       def mkWithScope(s: Scope): MLib =
         new MLib {
@@ -221,13 +230,13 @@ object ScalaLibraries {
         .map(JSON.parse(_).asInstanceOf[A])
 
       val fetchRepo =
-        githubApi[RepoResult](s"https://api.github.com/repos/japgolly/${lib.repoName}")
+        githubApi[RepoResult](s"https://api.github.com/repos/${lib.orgName}/${lib.repoName}")
 
       val fetchTags: AsyncCallback[TagsResult] =
         if (lib.tags.contains(Tag.App))
           AsyncCallback.pure(new js.Array)
         else
-          githubApi[TagsResult](s"https://api.github.com/repos/japgolly/${lib.repoName}/tags")
+          githubApi[TagsResult](s"https://api.github.com/repos/${lib.orgName}/${lib.repoName}/tags")
 
       (fetchRepo.attempt).zip(fetchTags.attempt).map { case (repo, tags) =>
         LibMeta(
